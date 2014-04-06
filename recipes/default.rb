@@ -30,7 +30,19 @@ execute 'move sources.list' do
   notifies :run, 'execute[apt-get update]', :immediately
 end
 
+cache_netselect = "#{Chef::Config[:file_cache_path]}/netselect"
+
 execute 'find fastest mirror' do
   command "netselect-apt #{node['netselect']['distribution']} #{options.join(' ')}"
   notifies :run, 'execute[move sources.list]', :immediately
+  not_if do
+    ::File.exists?(cache_netselect)
+  end
+end
+
+file cache_netselect do
+  owner 'root'
+  group 'root'
+  mode '0644'
+  action :create_if_missing
 end
